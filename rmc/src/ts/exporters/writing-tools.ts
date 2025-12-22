@@ -5,7 +5,7 @@
  * @module writing-tools
  */
 
-import { PenColor, Pen as PenType } from '../../../rmscene/src/ts/scene-items.ts';
+import { PenColor, Pen as PenType } from '../../../../rmscene/src/ts/scene-items.ts';
 
 /** Color palette mapping PenColor to RGB values */
 export const RM_PALETTE: Record<PenColor, [number, number, number]> = {
