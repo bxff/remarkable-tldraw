@@ -31,9 +31,6 @@ import { RM_PALETTE, HIGHLIGHT_COLORS } from './writing-tools.ts';
 // These match the types from @tldraw/tlschema
 // ============================================================
 
-/** Index key type for ordering */
-type IndexKey = string & { __brand: 'indexKey' };
-
 /** Vector model for point coordinates */
 interface VecModel {
     x: number;
@@ -117,34 +114,34 @@ function encodePoints(points: VecModel[]): string {
 }
 
 // ============================================================
-// IndexKey generation (from @tldraw/utils reordering)
-// Simplified implementation for standalone use
+// IndexKey generation - using proper fractional indexing
 // ============================================================
 
-const ZERO_INDEX_KEY = 'a0' as IndexKey;
+import {
+    IndexKey,
+    ZERO_INDEX_KEY,
+    getIndexAbove,
+    getIndicesAbove,
+} from '../utils/reordering.ts';
 
-let indexCounter = 0;
+export { IndexKey, ZERO_INDEX_KEY };
 
-/** Generate the next index key */
+let lastIndex: IndexKey | null = null;
+
+/** Get the next index key */
 function getNextIndex(): IndexKey {
-    indexCounter++;
-    // Format: a{counter} - simple incrementing keys
-    // For more robust implementation, use jittered-fractional-indexing
-    return `a${indexCounter}` as IndexKey;
+    lastIndex = getIndexAbove(lastIndex);
+    return lastIndex;
 }
 
 /** Reset index counter */
 export function resetIndexCounter(): void {
-    indexCounter = 0;
+    lastIndex = null;
 }
 
 /** Get multiple indices at once */
 function getIndices(count: number): IndexKey[] {
-    const indices: IndexKey[] = [];
-    for (let i = 0; i < count; i++) {
-        indices.push(getNextIndex());
-    }
-    return indices;
+    return getIndicesAbove(lastIndex, count);
 }
 
 // ============================================================

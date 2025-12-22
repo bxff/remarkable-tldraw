@@ -18,3 +18,22 @@ export {
     rmToTldrawJson,
     resetIndexCounter,
 } from './exporters/tldraw.ts';
+
+// TLDraw importer (tldraw -> rm)
+export {
+    parseTldrawJson,
+    tldrawToSceneItems,
+    tldrawJsonToSceneItems,
+    createItemsFromTldraw,
+    resetIdCounter,
+} from './importers/tldraw.ts';
+
+// Utilities
+export {
+    IndexKey,
+    ZERO_INDEX_KEY,
+    getIndexAbove,
+    getIndicesAbove,
+    getIndexBetween,
+    getIndicesBetween,
+} from './utils/reordering.ts';

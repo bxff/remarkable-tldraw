@@ -29,5 +29,8 @@
     "@types/node": "^25.0.3",
     "typescript": "^5.7.0",
     "vitest": "^4.0.16"
+  },
+  "dependencies": {
+    "jittered-fractional-indexing": "^1.0.0"
   }
 }
