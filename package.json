@@ -1,20 +1,23 @@
 {
-  "name": "acta-hackathon-starter",
+  "name": "tldraw-rm-converter",
   "version": "1.0.0",
   "type": "module",
-  "description": "ACTA 24-hour Global Hackathon starter repository",
-  "main": "index.js",
+  "description": "Convert between reMarkable .rm files and tldraw format",
+  "main": "dist/index.js",
   "scripts": {
     "verify": "node verify-submission.js",
-    "start": "echo 'Add your start command here!'",
-    "test": "echo 'Add your test command here!'"
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc"
   },
   "keywords": [
-    "hackathon",
-    "acta",
-    "starter"
+    "tldraw",
+    "remarkable",
+    "rmscene",
+    "converter"
   ],
-  "author": "ACTA Studios",
+  "author": "",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -23,6 +26,8 @@
   "devDependencies": {
     "@tldraw/tlschema": "^4.2.1",
     "@tldraw/utils": "^4.2.1",
+    "@types/node": "^25.0.3",
+    "typescript": "^5.7.0",
     "vitest": "^4.0.16"
   }
 }

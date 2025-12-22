@@ -1,0 +1,39 @@
+{
+    "compilerOptions": {
+        "target": "ES2020",
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "lib": [
+            "ES2020"
+        ],
+        "strict": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "declaration": true,
+        "declarationMap": true,
+        "sourceMap": true,
+        "outDir": "./dist",
+        "rootDir": ".",
+        "allowImportingTsExtensions": true,
+        "noEmit": true,
+        "baseUrl": ".",
+        "paths": {
+            "@rmscene/*": [
+                "rmscene/src/ts/*"
+            ],
+            "@rmc/*": [
+                "rmc/src/ts/*"
+            ]
+        }
+    },
+    "include": [
+        "rmscene/src/ts/**/*.ts",
+        "rmscene/tests/ts/**/*.ts",
+        "rmc/src/ts/**/*.ts",
+        "rmc/tests/ts/**/*.ts"
+    ],
+    "exclude": [
+        "node_modules",
+        "tldraw"
+    ]
+}
