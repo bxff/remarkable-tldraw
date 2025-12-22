@@ -189,6 +189,44 @@ function penColorToTldrawColor(color: PenColor): string {
     return colorMap[color] ?? 'black';
 }
 
+/**
+ * Get tldraw color for a line, considering pen type.
+ * Some pen types (Ballpoint, Brush) dynamically calculate colors in SVG
+ * based on pressure/speed, producing black/grey colors.
+ * For consistency, these pens should use black in tldraw.
+ */
+function getLineColor(line: Line): string {
+    // Pen types that dynamically calculate colors in SVG -> use black
+    const dynamicColorPens = [
+        Pen.BALLPOINT_1,
+        Pen.BALLPOINT_2,
+        Pen.PAINTBRUSH_1,
+        Pen.PAINTBRUSH_2,
+    ];
+
+    if (dynamicColorPens.includes(line.tool)) {
+        return 'black';
+    }
+
+    // Highlighter pens use their highlight color
+    if (line.tool === Pen.HIGHLIGHTER_1 || line.tool === Pen.HIGHLIGHTER_2) {
+        // Map highlight colors
+        const highlightColorMap: Record<number, string> = {
+            [PenColor.YELLOW]: 'yellow',
+            [PenColor.GREEN]: 'green',
+            [PenColor.PINK]: 'red',
+            [PenColor.HIGHLIGHT]: 'yellow',
+            [PenColor.GREEN_2]: 'light-green',
+            [PenColor.CYAN]: 'light-blue',
+            [PenColor.MAGENTA]: 'violet',
+            [PenColor.YELLOW_2]: 'yellow',
+        };
+        return highlightColorMap[line.color] ?? 'yellow';
+    }
+
+    return penColorToTldrawColor(line.color);
+}
+
 /** Map line thickness to tldraw size */
 function thicknessToTldrawSize(thickness: number): 's' | 'm' | 'l' | 'xl' {
     if (thickness < 1.5) return 's';
@@ -323,7 +361,7 @@ function lineToDrawShape(
         index,
         typeName: 'shape',
         props: {
-            color: penColorToTldrawColor(line.color),
+            color: getLineColor(line),
             fill: 'none',
             dash: 'solid',
             size: thicknessToTldrawSize(line.thicknessScale),
