@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" height="596.70796460177" width="447.6106194690265" viewBox="-223.64601769911505 0 447.6106194690265 596.70796460177">
+	<g id="p1" style="display:inline">
+		<g class="root-text" style="display:inline">
+
+            <style>
+                text.heading {
+                    font: 14pt serif;
+                }
+                text.bold {
+                    font: 8pt sans-serif bold;
+                }
+                text, text.plain {
+                    font: 7pt sans-serif;
+                }
+            </style>
+
+			<text x="-149.09734513274336" y="94.30088495575221" class="heading">text 1</text>
+			<text x="-149.09734513274336" y="116.60176991150442" class="plain">text 2</text>
+			<text x="-149.09734513274336" y="138.90265486725664" class="plain">text 3</text>
+			<text x="-149.09734513274336" y="161.20353982300884" class="plain">text 4</text>
+			<text x="-149.09734513274336" y="183.50442477876106" class="plain">text 5</text>
+			<text x="-149.09734513274336" y="250.4070796460177" class="plain">text 8</text>
+			<text x="-149.09734513274336" y="361.91150442477874" class="plain">text 13</text>
+		</g>
+		<g id="CrdtId(0, 1)" transform="translate(0, 0)">
+		<g id="CrdtId(0, 11)" transform="translate(0, 0)">
+		</g>
+		</g>
+	</g>
+</svg>

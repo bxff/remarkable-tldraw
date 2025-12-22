@@ -2,6 +2,7 @@
  * SVG exporter for reMarkable scene data.
  * 
  * TypeScript port of rmc/src/rmc/exporters/svg.py
+ * Matches Python implementation exactly for identical output.
  * @module svg
  */
 
@@ -21,198 +22,276 @@ import {
     createCrdtId,
 } from '../../../../rmscene/src/ts/index.ts';
 import { WritingPen, RM_PALETTE, HIGHLIGHT_COLORS } from './writing-tools.ts';
+import { parseTextDocument, paragraphToString, Paragraph } from '../text.ts';
 
-// Coordinate transformation scale
-const SCALE = 1.0;
+// Screen constants from Python
+const SCREEN_WIDTH = 1404;
+const SCREEN_HEIGHT = 1872;
+const SCREEN_DPI = 226;
 
-/** Transform x coordinate */
-function xx(val: number): number {
-    return val * SCALE;
+// Scale factor to convert screen units to points (72 DPI)
+const SCALE = 72.0 / SCREEN_DPI;
+
+const PAGE_WIDTH_PT = SCREEN_WIDTH * SCALE;
+const PAGE_HEIGHT_PT = SCREEN_HEIGHT * SCALE;
+const X_SHIFT = PAGE_WIDTH_PT / 2;
+
+/** Scale screen units to points */
+function scale(screenUnit: number): number {
+    return screenUnit * SCALE;
 }
 
-/** Transform y coordinate */
-function yy(val: number): number {
-    return val * SCALE;
-}
+// For now xx and yy are identical to scale (matching Python)
+const xx = scale;
+const yy = scale;
 
-// Text layout constants
-const TEXT_TOP_Y = 116;
-const LINE_HEIGHTS: Record<ParagraphStyle, [number, number]> = {
-    [ParagraphStyle.BASIC]: [35.52, 48.16],
-    [ParagraphStyle.PLAIN]: [35.52, 48.16],
-    [ParagraphStyle.HEADING]: [59.65, 78.31],
-    [ParagraphStyle.BOLD]: [35.52, 48.16],
-    [ParagraphStyle.BULLET]: [35.52, 51.68],
-    [ParagraphStyle.BULLET2]: [35.52, 51.68],
-    [ParagraphStyle.CHECKBOX]: [35.52, 48.16],
-    [ParagraphStyle.CHECKBOX_CHECKED]: [35.52, 48.16],
+// Text layout constants from Python
+const TEXT_TOP_Y = -88;
+const LINE_HEIGHTS: Record<number, number> = {
+    [ParagraphStyle.PLAIN]: 70,
+    [ParagraphStyle.BULLET]: 35,
+    [ParagraphStyle.BULLET2]: 35,
+    [ParagraphStyle.BOLD]: 70,
+    [ParagraphStyle.HEADING]: 150,
+    [ParagraphStyle.CHECKBOX]: 35,
+    [ParagraphStyle.CHECKBOX_CHECKED]: 35,
 };
 
-/** Build anchor position map from root text */
-export function buildAnchorPos(rootText: Text | null): Map<string, [number, number]> {
-    const anchorPos = new Map<string, [number, number]>();
+/** Get paragraph style name (matching Python) */
+function getStyleName(style: ParagraphStyle): string {
+    const names: Record<number, string> = {
+        [ParagraphStyle.PLAIN]: 'plain',
+        [ParagraphStyle.HEADING]: 'heading',
+        [ParagraphStyle.BOLD]: 'bold',
+        [ParagraphStyle.BULLET]: 'bullet',
+        [ParagraphStyle.BULLET2]: 'bullet2',
+        [ParagraphStyle.CHECKBOX]: 'checkbox',
+        [ParagraphStyle.CHECKBOX_CHECKED]: 'checkbox_checked',
+        [ParagraphStyle.BASIC]: 'basic',
+    };
+    return names[style] ?? 'plain';
+}
+
+/** Special anchors from Python */
+const SPECIAL_ANCHORS: Map<string, number> = new Map([
+    [crdtIdToString(createCrdtId(0, 281474976710654)), 100],
+    [crdtIdToString(createCrdtId(0, 281474976710655)), 100],
+]);
+
+/** Build anchor position map from root text (matching Python exactly) */
+export function buildAnchorPos(rootText: Text | null): Map<string, number> {
+    const anchorPos = new Map<string, number>();
+
+    // Add special anchors
+    for (const [key, value] of SPECIAL_ANCHORS) {
+        anchorPos.set(key, value);
+    }
 
     if (!rootText) {
         return anchorPos;
     }
 
-    // Build character-to-position mapping
-    let y = rootText.posY;
-    let lineStyle = ParagraphStyle.PLAIN;
-    let x = 0;
+    // Use TextDocument to parse paragraphs (matching Python)
+    const doc = parseTextDocument(rootText);
+    let ypos = rootText.posY + TEXT_TOP_Y;
 
-    for (const [charId, char] of rootText.items.entries()) {
-        const charIdStr = crdtIdToString(charId);
-        const charStyle = rootText.styles.get(charIdStr);
-        if (charStyle) {
-            lineStyle = charStyle.value;
-        }
+    for (const p of doc.contents) {
+        // Add anchor for paragraph start
+        anchorPos.set(crdtIdToString(p.startId), ypos);
 
-        // Handle newlines
-        if (typeof char === 'string') {
-            for (let i = 0; i < char.length; i++) {
-                const c = char[i];
-                const currentId = createCrdtId(charId.part1, charId.part2 + i);
-                const idStr = crdtIdToString(currentId);
-                anchorPos.set(idStr, [x, y]);
-
-                if (c === '\n') {
-                    const [fontHeight, lineHeight] = LINE_HEIGHTS[lineStyle] ?? [35.52, 48.16];
-                    y += lineHeight;
-                    x = 0;
-                }
+        // Add anchors for all characters in paragraph
+        for (const subp of p.contents) {
+            for (const k of subp.i) {
+                anchorPos.set(crdtIdToString(k), ypos);
             }
         }
+
+        // Advance y by line height for this style
+        ypos += LINE_HEIGHTS[p.style.value] ?? 70;
     }
 
     return anchorPos;
 }
 
+/** Get anchor position for a group */
+function getAnchor(item: Group, anchorPos: Map<string, number>): [number, number] {
+    let anchorX = 0;
+    let anchorY = 0;
+
+    if (item.anchorId?.value) {
+        if (item.anchorOriginX?.value !== undefined) {
+            anchorX = item.anchorOriginX.value;
+        }
+        const anchorIdStr = crdtIdToString(item.anchorId.value);
+        const pos = anchorPos.get(anchorIdStr);
+        if (pos !== undefined) {
+            anchorY = pos;
+        }
+    }
+
+    return [anchorX, anchorY];
+}
+
 /** Get bounding box of scene items */
 export function getBoundingBox(
-    items: Iterable<[CrdtId, SceneItem]>,
-    anchorPos: Map<string, [number, number]>,
-    tree: SceneTree
-): { minX: number; minY: number; maxX: number; maxY: number } {
-    let minX = Infinity;
-    let minY = Infinity;
-    let maxX = -Infinity;
-    let maxY = -Infinity;
+    item: Group,
+    anchorPos: Map<string, number>,
+    defaultBox: [number, number, number, number] = [-SCREEN_WIDTH / 2, SCREEN_WIDTH / 2, 0, SCREEN_HEIGHT]
+): [number, number, number, number] {
+    let [xMin, xMax, yMin, yMax] = defaultBox;
 
-    for (const [id, item] of items) {
-        if (isLine(item)) {
-            for (const point of item.points) {
-                const x = xx(point.x);
-                const y = yy(point.y);
-                minX = Math.min(minX, x);
-                maxX = Math.max(maxX, x);
-                minY = Math.min(minY, y);
-                maxY = Math.max(maxY, y);
-            }
-        } else if (isGlyphRange(item)) {
-            for (const rect of item.rectangles) {
-                minX = Math.min(minX, xx(rect.x));
-                maxX = Math.max(maxX, xx(rect.x + rect.w));
-                minY = Math.min(minY, yy(rect.y));
-                maxY = Math.max(maxY, yy(rect.y + rect.h));
-            }
-        } else if (isGroup(item)) {
-            // Recursively get bounding box of group children
-            const childItems = item.children.entries();
-            const childBounds = getBoundingBox(childItems, anchorPos, tree);
-            if (childBounds.minX !== Infinity) {
-                minX = Math.min(minX, childBounds.minX);
-                maxX = Math.max(maxX, childBounds.maxX);
-                minY = Math.min(minY, childBounds.minY);
-                maxY = Math.max(maxY, childBounds.maxY);
+    for (const childId of item.children) {
+        const child = item.children.get(childId);
+        if (!child) continue;
+
+        if (isGroup(child)) {
+            const [anchorX, anchorY] = getAnchor(child, anchorPos);
+            const [xMinT, xMaxT, yMinT, yMaxT] = getBoundingBox(child, anchorPos, [0, 0, 0, 0]);
+            xMin = Math.min(xMin, xMinT + anchorX);
+            xMax = Math.max(xMax, xMaxT + anchorX);
+            yMin = Math.min(yMin, yMinT + anchorY);
+            yMax = Math.max(yMax, yMaxT + anchorY);
+        } else if (isLine(child)) {
+            for (const p of child.points) {
+                xMin = Math.min(xMin, p.x);
+                xMax = Math.max(xMax, p.x);
+                yMin = Math.min(yMin, p.y);
+                yMax = Math.max(yMax, p.y);
             }
         }
     }
 
-    if (minX === Infinity) {
-        return { minX: 0, minY: 0, maxX: 100, maxY: 100 };
-    }
-
-    return { minX, minY, maxX, maxY };
+    return [xMin, xMax, yMin, yMax];
 }
 
-/** Draw a stroke line */
-function drawStroke(line: Line): string {
-    if (line.points.length < 2) {
-        return '';
+/** Draw a stroke with segment-based rendering (matching Python exactly) */
+function drawStroke(item: Line, output: string[]): void {
+    // Create the pen
+    const pen = WritingPen.create(item.tool, item.color, item.thicknessScale);
+
+    let lastXpos = -1;
+    let lastYpos = -1;
+    let lastSegmentWidth = 0;
+    let segmentWidth = 0;
+
+    // Iterate through points to form polylines
+    for (let pointId = 0; pointId < item.points.length; pointId++) {
+        const point = item.points[pointId];
+        const xpos = point.x;
+        const ypos = point.y;
+
+        if (pointId % pen.segmentLength === 0) {
+            // If there was a previous segment, end it
+            if (lastXpos !== -1) {
+                output.push('"/>');
+            }
+
+            const segmentColor = pen.getSegmentColor(
+                point.speed, point.direction, point.width, point.pressure, lastSegmentWidth
+            );
+            segmentWidth = pen.getSegmentWidth(
+                point.speed, point.direction, point.width, point.pressure, lastSegmentWidth
+            );
+            const segmentOpacity = pen.getSegmentOpacity(
+                point.speed, point.direction, point.width, point.pressure, lastSegmentWidth
+            );
+
+            // Create the next segment of the stroke
+            output.push(
+                `\t\t\t<polyline style="fill:none; stroke:${segmentColor}; ` +
+                `stroke-width:${scale(segmentWidth).toFixed(3)}; opacity:${segmentOpacity}" ` +
+                `stroke-linecap="${pen.strokeLinecap}" ` +
+                `points="`
+            );
+
+            if (lastXpos !== -1) {
+                // Join to previous segment
+                output.push(`${xx(lastXpos).toFixed(3)},${yy(lastYpos).toFixed(3)} `);
+            }
+        }
+
+        // Store the last position
+        lastXpos = xpos;
+        lastYpos = ypos;
+        lastSegmentWidth = segmentWidth;
+
+        // Add current point
+        output.push(`${xx(xpos).toFixed(3)},${yy(ypos).toFixed(3)} `);
     }
 
-    const pen = WritingPen.create(line.tool, line.color, line.thicknessScale);
-    const pathParts: string[] = [];
-
-    // Move to first point
-    const first = line.points[0];
-    pathParts.push(`M${xx(first.x).toFixed(2)},${yy(first.y).toFixed(2)}`);
-
-    // Draw segments
-    let lastWidth = pen.baseWidth;
-    for (let i = 1; i < line.points.length; i++) {
-        const p = line.points[i];
-        pathParts.push(`L${xx(p.x).toFixed(2)},${yy(p.y).toFixed(2)}`);
-        lastWidth = pen.getSegmentWidth(p.speed, p.direction, p.width, p.pressure, lastWidth);
-    }
-
-    const pathD = pathParts.join('');
-    const color = pen.getSegmentColor(first.speed, first.direction, first.width, first.pressure, pen.baseWidth);
-    const opacity = pen.getSegmentOpacity(first.speed, first.direction, first.width, first.pressure, pen.baseWidth);
-    const strokeWidth = pen.getSegmentWidth(first.speed, first.direction, first.width, first.pressure, pen.baseWidth);
-
-    return `<path d="${pathD}" fill="none" stroke="${color}" stroke-width="${strokeWidth.toFixed(2)}" stroke-opacity="${opacity}" stroke-linecap="${pen.strokeLinecap}"/>`;
+    // End stroke
+    output.push('" />');
 }
 
-/** Draw a glyph range (highlight) */
-function drawGlyphRange(glyph: GlyphRange): string {
-    const color = HIGHLIGHT_COLORS[glyph.color] ?? [255, 255, 0];
-    const rects: string[] = [];
+/** Draw a group and its children */
+function drawGroup(item: Group, output: string[], anchorPos: Map<string, number>): void {
+    const [anchorX, anchorY] = getAnchor(item, anchorPos);
 
-    for (const rect of glyph.rectangles) {
-        rects.push(
-            `<rect x="${xx(rect.x).toFixed(2)}" y="${yy(rect.y).toFixed(2)}" ` +
-            `width="${xx(rect.w).toFixed(2)}" height="${yy(rect.h).toFixed(2)}" ` +
-            `fill="rgb(${color[0]}, ${color[1]}, ${color[2]})" fill-opacity="0.3"/>`
-        );
-    }
+    output.push(`\t\t<g id="${crdtIdToString(item.nodeId)}" transform="translate(${xx(anchorX)}, ${yy(anchorY)})">`);
 
-    return rects.join('\n');
-}
+    for (const childId of item.children) {
+        const child = item.children.get(childId);
+        if (!child) continue;
 
-/** Draw group and its children */
-function drawGroup(
-    group: Group,
-    anchorPos: Map<string, [number, number]>,
-    tree: SceneTree
-): string {
-    const parts: string[] = [];
-
-    // Calculate anchor offset
-    let offsetY = 0;
-    if (group.anchorId?.value) {
-        const anchorIdStr = crdtIdToString(group.anchorId.value);
-        const pos = anchorPos.get(anchorIdStr);
-        if (pos) {
-            offsetY = pos[1];
+        if (isGroup(child)) {
+            drawGroup(child, output, anchorPos);
+        } else if (isLine(child)) {
+            drawStroke(child, output);
         }
     }
 
-    for (const [id, item] of group.children.entries()) {
-        if (isLine(item)) {
-            parts.push(drawStroke(item));
-        } else if (isGlyphRange(item)) {
-            parts.push(drawGlyphRange(item));
-        } else if (isGroup(item)) {
-            parts.push(drawGroup(item, anchorPos, tree));
+    output.push(`\t\t</g>`);
+}
+
+/** Draw text elements (matching Python draw_text exactly) */
+function drawText(text: Text, output: string[]): void {
+    output.push('\t\t<g class="root-text" style="display:inline">');
+
+    // Add CSS styles for text (matching Python exactly)
+    output.push(`
+            <style>
+                text.heading {
+                    font: 14pt serif;
+                }
+                text.bold {
+                    font: 8pt sans-serif bold;
+                }
+                text, text.plain {
+                    font: 7pt sans-serif;
+                }
+            </style>
+`);
+
+    let yOffset = TEXT_TOP_Y;
+
+    // Parse text document (matching Python)
+    const doc = parseTextDocument(text);
+
+    for (const p of doc.contents) {
+        // Advance y by line height BEFORE rendering (matching Python)
+        yOffset += LINE_HEIGHTS[p.style.value] ?? 70;
+
+        const xpos = text.posX;
+        const ypos = text.posY + yOffset;
+        const cls = getStyleName(p.style.value);
+        const content = paragraphToString(p).trim();
+
+        if (content) {
+            output.push(`\t\t\t<text x="${xx(xpos)}" y="${yy(ypos)}" class="${cls}">${escapeXml(content)}</text>`);
         }
     }
 
-    if (offsetY !== 0) {
-        return `<g transform="translate(0, ${yy(offsetY).toFixed(2)})">\n${parts.join('\n')}\n</g>`;
-    }
-    return parts.join('\n');
+    output.push('\t\t</g>');
+}
+
+/** Escape XML special characters */
+function escapeXml(text: string): string {
+    return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&apos;');
 }
 
 /** Convert scene tree to SVG string */
@@ -220,25 +299,38 @@ export function treeToSvg(tree: SceneTree): string {
     const anchorPos = buildAnchorPos(tree.rootText);
 
     // Get bounding box
-    const items = tree.walk();
-    const bounds = getBoundingBox(items, anchorPos, tree);
+    const [xMin, xMax, yMin, yMax] = getBoundingBox(tree.root, anchorPos);
+    const widthPt = xx(xMax - xMin + 1);
+    const heightPt = yy(yMax - yMin + 1);
+    const viewBox = `${xx(xMin)} ${yy(yMin)} ${widthPt} ${heightPt}`;
 
-    const margin = 10;
-    const width = bounds.maxX - bounds.minX + margin * 2;
-    const height = bounds.maxY - bounds.minY + margin * 2;
-    const viewBox = `${bounds.minX - margin} ${bounds.minY - margin} ${width} ${height}`;
+    const output: string[] = [];
 
-    const svgContent = drawGroup(tree.root, anchorPos, tree);
+    // SVG header
+    output.push(`<?xml version="1.0" encoding="UTF-8"?>`);
+    output.push(`<svg xmlns="http://www.w3.org/2000/svg" height="${heightPt}" width="${widthPt}" viewBox="${viewBox}">`);
 
-    return `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}" width="${width}" height="${height}">
-${svgContent}
-</svg>`;
+    // Page group
+    output.push(`\t<g id="p1" style="display:inline">`);
+
+    // Draw text if present
+    if (tree.rootText) {
+        drawText(tree.rootText, output);
+    }
+
+    // Draw groups
+    drawGroup(tree.root, output, anchorPos);
+
+    // Close page group
+    output.push('\t</g>');
+    output.push('</svg>');
+
+    return output.join('\n');
 }
 
 /** Convert rm file data to SVG */
 export function rmToSvg(data: ArrayBuffer | Uint8Array): string {
-    const { readTree } = require('../../../rmscene/src/ts/scene-tree.ts');
+    const { readTree } = require('../../../../rmscene/src/ts/scene-tree.ts');
     const tree = readTree(data);
     return treeToSvg(tree);
 }
