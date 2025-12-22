@@ -32,7 +32,7 @@
       "typeName": "pointer",
       "x": 0,
       "y": 0,
-      "lastActivityTimestamp": 1766439004317,
+      "lastActivityTimestamp": 1766440895540,
       "meta": {}
     },
     {
@@ -49,16 +49,29 @@
       "isLocked": false,
       "opacity": 1,
       "meta": {},
-      "id": "shape:8gqys1npdow",
+      "id": "shape:ur472me0c4",
       "type": "text",
       "parentId": "page:page",
-      "index": "a0HUnwuG",
+      "index": "a0v8dFpV",
       "typeName": "shape",
       "props": {
         "color": "black",
         "size": "m",
         "w": 1872,
-        "text": "AB",
+        "richText": {
+          "type": "doc",
+          "content": [
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "AB"
+                }
+              ]
+            }
+          ]
+        },
         "font": "draw",
         "textAlign": "start",
         "autoSize": true,

@@ -32,7 +32,7 @@
       "typeName": "pointer",
       "x": 0,
       "y": 0,
-      "lastActivityTimestamp": 1766439004313,
+      "lastActivityTimestamp": 1766440895535,
       "meta": {}
     },
     {
@@ -49,16 +49,56 @@
       "isLocked": false,
       "opacity": 1,
       "meta": {},
-      "id": "shape:612y0u3x943",
+      "id": "shape:e4j0xobhjh8",
       "type": "text",
       "parentId": "page:page",
-      "index": "a0U6jlVl",
+      "index": "a0i4Jb7V",
       "typeName": "shape",
       "props": {
         "color": "black",
         "size": "m",
         "w": 1872,
-        "text": "A is a letter of the alphabet\nnew line\nB\nC",
+        "richText": {
+          "type": "doc",
+          "content": [
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "A is a letter of the alphabet"
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "new line"
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "B"
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "C"
+                }
+              ]
+            }
+          ]
+        },
         "font": "draw",
         "textAlign": "start",
         "autoSize": true,

@@ -94,7 +94,7 @@ interface VecModel {
 }
 
 /** Decode base64-encoded points to VecModel array */
-function decodePoints(base64: string): VecModel[] {
+function decodeBase64Points(base64: string): VecModel[] {
     const uint16s = base64ToUint16Array(base64);
     const result: VecModel[] = [];
     for (let i = 0; i < uint16s.length; i += 3) {
@@ -105,6 +105,19 @@ function decodePoints(base64: string): VecModel[] {
         });
     }
     return result;
+}
+
+/** Parse points from segment - handles both JSON array and base64 formats */
+function parseSegmentPoints(points: string | VecModel[]): VecModel[] {
+    if (Array.isArray(points)) {
+        // Already an array of VecModel objects
+        return points;
+    }
+    if (typeof points === 'string') {
+        // Base64 encoded string
+        return decodeBase64Points(points);
+    }
+    return [];
 }
 
 // ============================================================
@@ -185,7 +198,7 @@ interface TLShape extends TLRecord {
 
 interface TLDrawShapeSegment {
     type: 'free' | 'straight';
-    points: string; // base64 encoded
+    points: string | VecModel[]; // Either base64 encoded string or JSON array
 }
 
 // ============================================================
@@ -215,7 +228,7 @@ function drawShapeToLine(shape: TLShape): Line | null {
     for (const segment of props.segments as TLDrawShapeSegment[]) {
         if (!segment.points) continue;
 
-        const vecPoints = decodePoints(segment.points);
+        const vecPoints = parseSegmentPoints(segment.points);
 
         for (const vec of vecPoints) {
             // Transform from relative to absolute coordinates
@@ -256,7 +269,7 @@ function highlightShapeToGlyphRange(shape: TLShape): GlyphRange | null {
     for (const segment of props.segments as TLDrawShapeSegment[]) {
         if (!segment.points) continue;
 
-        const vecPoints = decodePoints(segment.points);
+        const vecPoints = parseSegmentPoints(segment.points);
         if (vecPoints.length < 2) continue;
 
         // Calculate bounding box for highlight rectangle

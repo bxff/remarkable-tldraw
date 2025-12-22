@@ -32,7 +32,7 @@
       "typeName": "pointer",
       "x": 0,
       "y": 0,
-      "lastActivityTimestamp": 1766439004318,
+      "lastActivityTimestamp": 1766440895541,
       "meta": {}
     },
     {
@@ -49,16 +49,29 @@
       "isLocked": false,
       "opacity": 1,
       "meta": {},
-      "id": "shape:kkoxyjwq52",
+      "id": "shape:3zdobkoylcc",
       "type": "text",
       "parentId": "page:page",
-      "index": "a08ECYTV",
+      "index": "a0UG2jHG",
       "typeName": "shape",
       "props": {
         "color": "black",
         "size": "m",
         "w": 1872,
-        "text": "A",
+        "richText": {
+          "type": "doc",
+          "content": [
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "A"
+                }
+              ]
+            }
+          ]
+        },
         "font": "draw",
         "textAlign": "start",
         "autoSize": true,
@@ -72,10 +85,10 @@
       "isLocked": false,
       "opacity": 1,
       "meta": {},
-      "id": "shape:er72qhnqddh",
+      "id": "shape:urf840d71yk",
       "type": "draw",
       "parentId": "page:page",
-      "index": "a1xuGpLV",
+      "index": "a1SaYcLV",
       "typeName": "shape",
       "props": {
         "color": "black",
@@ -85,7 +98,43 @@
         "segments": [
           {
             "type": "free",
-            "points": "AADGN68pqzyhPPw5JUC6M+86cUCfPEI7hj9zOEw7D0H7OVA72DwAAD82"
+            "points": [
+              {
+                "x": 0,
+                "y": 0.485748291015625,
+                "z": 0.044395606964826584
+              },
+              {
+                "x": 1.167236328125,
+                "y": 1.15704345703125,
+                "z": 0.7480302453041077
+              },
+              {
+                "x": 2.07232666015625,
+                "y": 0.24139404296875,
+                "z": 0.8666239380836487
+              },
+              {
+                "x": 2.220703125,
+                "y": 1.155364990234375,
+                "z": 0.9072042107582092
+              },
+              {
+                "x": 1.8807373046875,
+                "y": 0.556304931640625,
+                "z": 0.9120849370956421
+              },
+              {
+                "x": 2.5289306640625,
+                "y": 0.747711181640625,
+                "z": 0.9139180183410645
+              },
+              {
+                "x": 1.2108154296875,
+                "y": 0,
+                "z": 0.3904123902320862
+              }
+            ]
           }
         ],
         "isComplete": true,
@@ -101,10 +150,10 @@
       "isLocked": false,
       "opacity": 1,
       "meta": {},
-      "id": "shape:e8uhv69kqba",
+      "id": "shape:dv35w2qowqe",
       "type": "draw",
       "parentId": "page:page",
-      "index": "a2i1XJsV",
+      "index": "a2nZZnTV",
       "typeName": "shape",
       "props": {
         "color": "black",
@@ -114,7 +163,43 @@
         "segments": [
           {
             "type": "free",
-            "points": "AAB8OrgrGDmIPeI47TgAAFI5KDtLP5c6uzVpQB07kjoXQyA7iTqdQQA4"
+            "points": [
+              {
+                "x": 0,
+                "y": 0.8106689453125,
+                "z": 0.0602930448949337
+              },
+              {
+                "x": 0.63677978515625,
+                "y": 1.38311767578125,
+                "z": 0.6102076768875122
+              },
+              {
+                "x": 0.61553955078125,
+                "y": 0,
+                "z": 0.6650200486183167
+              },
+              {
+                "x": 0.89459228515625,
+                "y": 1.822998046875,
+                "z": 0.8237853050231934
+              },
+              {
+                "x": 0.358154296875,
+                "y": 2.205810546875,
+                "z": 0.8889415264129639
+              },
+              {
+                "x": 0.8214111328125,
+                "y": 3.54449462890625,
+                "z": 0.8906087875366211
+              },
+              {
+                "x": 0.8167724609375,
+                "y": 2.8074951171875,
+                "z": 0.4999176263809204
+              }
+            ]
           }
         ],
         "isComplete": true,

@@ -38,10 +38,35 @@ interface VecModel {
     z?: number;
 }
 
+/** Rich text document structure (matches tldraw TLRichText) */
+interface TLRichText {
+    type: 'doc';
+    content: Array<{
+        type: 'paragraph';
+        content?: Array<{ type: 'text'; text: string }>;
+    }>;
+    attrs?: Record<string, unknown>;
+}
+
+/** Convert plain text to TLRichText format */
+function toRichText(text: string): TLRichText {
+    const lines = text.split('\n');
+    const content = lines.map((line) => {
+        if (!line) {
+            return { type: 'paragraph' as const };
+        }
+        return {
+            type: 'paragraph' as const,
+            content: [{ type: 'text' as const, text: line }],
+        };
+    });
+    return { type: 'doc', content };
+}
+
 /** Draw shape segment */
 interface TLDrawShapeSegment {
     type: 'free' | 'straight';
-    points: string; // base64 encoded points
+    points: VecModel[]; // Array of point objects (compatible with older tldraw format)
 }
 
 // ============================================================
@@ -368,7 +393,7 @@ function lineToDrawShape(
             segments: [
                 {
                     type: 'free',
-                    points: encodePoints(normalizedPoints),
+                    points: normalizedPoints,
                 },
             ],
             isComplete: true,
@@ -417,7 +442,7 @@ function glyphRangeToHighlightShapes(
                 segments: [
                     {
                         type: 'straight',
-                        points: encodePoints(points),
+                        points: points,
                     },
                 ],
                 isComplete: true,
@@ -467,7 +492,7 @@ function textToTextShape(
             color: 'black',
             size: 'm',
             w: text.width * SCALE_FACTOR,
-            text: textContent,
+            richText: toRichText(textContent),
             font: 'draw',
             textAlign: 'start',
             autoSize: true,

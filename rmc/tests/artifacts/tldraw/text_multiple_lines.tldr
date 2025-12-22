@@ -32,7 +32,7 @@
       "typeName": "pointer",
       "x": 0,
       "y": 0,
-      "lastActivityTimestamp": 1766439004407,
+      "lastActivityTimestamp": 1766440895672,
       "meta": {}
     },
     {
@@ -49,16 +49,101 @@
       "isLocked": false,
       "opacity": 1,
       "meta": {},
-      "id": "shape:mba9d71irrf",
+      "id": "shape:ss5bxafa4ql",
       "type": "text",
       "parentId": "page:page",
-      "index": "a0dJoUcl",
+      "index": "a0qZxclV",
       "typeName": "shape",
       "props": {
         "color": "black",
         "size": "m",
         "w": 1872,
-        "text": "text 1\ntext 2\ntext 3\n        text 4\ntext 5\n\n\ntext 8\n\n\n\n\ntext 13",
+        "richText": {
+          "type": "doc",
+          "content": [
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "text 1"
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "text 2"
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "text 3"
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "        text 4"
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "text 5"
+                }
+              ]
+            },
+            {
+              "type": "paragraph"
+            },
+            {
+              "type": "paragraph"
+            },
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "text 8"
+                }
+              ]
+            },
+            {
+              "type": "paragraph"
+            },
+            {
+              "type": "paragraph"
+            },
+            {
+              "type": "paragraph"
+            },
+            {
+              "type": "paragraph"
+            },
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "text 13"
+                }
+              ]
+            }
+          ]
+        },
         "font": "draw",
         "textAlign": "start",
         "autoSize": true,
