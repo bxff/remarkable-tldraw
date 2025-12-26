@@ -15,8 +15,8 @@
       "com.tldraw.shape": 4,
       "com.tldraw.shape.group": 0,
       "com.tldraw.shape.text": 3,
-      "com.tldraw.shape.draw": 2,
-      "com.tldraw.shape.highlight": 1
+      "com.tldraw.shape.draw": 3,
+      "com.tldraw.shape.highlight": 2
     }
   },
   "records": [
@@ -32,7 +32,7 @@
       "typeName": "pointer",
       "x": 0,
       "y": 0,
-      "lastActivityTimestamp": 1766440895605,
+      "lastActivityTimestamp": 1766710111396,
       "meta": {}
     },
     {
@@ -49,10 +49,10 @@
       "isLocked": false,
       "opacity": 1,
       "meta": {},
-      "id": "shape:epn50iywqw7",
+      "id": "shape:avdkx0opf8o",
       "type": "text",
       "parentId": "page:page",
-      "index": "a08dl7cV",
+      "index": "a0iMUD3l",
       "typeName": "shape",
       "props": {
         "color": "black",
@@ -66,7 +66,7 @@
               "content": [
                 {
                   "type": "text",
-                  "text": "crossed x"
+                  "text": "This is a text test file"
                 }
               ]
             },
@@ -75,7 +75,25 @@
               "content": [
                 {
                   "type": "text",
-                  "text": "checkboxsmall"
+                  "text": "checkbox"
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "bullet"
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "small"
                 }
               ]
             },
@@ -102,25 +120,7 @@
               "content": [
                 {
                   "type": "text",
-                  "text": "check"
-                }
-              ]
-            },
-            {
-              "type": "paragraph",
-              "content": [
-                {
-                  "type": "text",
-                  "text": "t test fileT"
-                }
-              ]
-            },
-            {
-              "type": "paragraph",
-              "content": [
-                {
-                  "type": "text",
-                  "text": "his is a tebullet"
+                  "text": "crossed check"
                 }
               ]
             },

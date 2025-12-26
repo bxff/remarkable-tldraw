@@ -15,8 +15,8 @@
       "com.tldraw.shape": 4,
       "com.tldraw.shape.group": 0,
       "com.tldraw.shape.text": 3,
-      "com.tldraw.shape.draw": 2,
-      "com.tldraw.shape.highlight": 1
+      "com.tldraw.shape.draw": 3,
+      "com.tldraw.shape.highlight": 2
     }
   },
   "records": [
@@ -32,7 +32,7 @@
       "typeName": "pointer",
       "x": 0,
       "y": 0,
-      "lastActivityTimestamp": 1766440895540,
+      "lastActivityTimestamp": 1766710111362,
       "meta": {}
     },
     {
@@ -49,10 +49,10 @@
       "isLocked": false,
       "opacity": 1,
       "meta": {},
-      "id": "shape:ur472me0c4",
+      "id": "shape:u62e6hfnsgk",
       "type": "text",
       "parentId": "page:page",
-      "index": "a0v8dFpV",
+      "index": "a0AI6ZIV",
       "typeName": "shape",
       "props": {
         "color": "black",

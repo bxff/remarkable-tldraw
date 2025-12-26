@@ -69,7 +69,7 @@ describe('TLDraw Exporter', () => {
             }
         });
 
-        it('should store points as JSON arrays', () => {
+        it('should store points as base64 encoded strings', () => {
             const filePath = join(rmTestDir, 'dot.stroke.rm');
             const data = readFileSync(filePath);
             const doc = rmToTldraw(data);
@@ -78,12 +78,9 @@ describe('TLDraw Exporter', () => {
 
             for (const shape of drawShapes) {
                 for (const segment of shape.props.segments) {
-                    // Points should be an array of objects
-                    expect(Array.isArray(segment.points)).toBe(true);
-                    if (segment.points.length > 0) {
-                        expect(typeof segment.points[0].x).toBe('number');
-                        expect(typeof segment.points[0].y).toBe('number');
-                    }
+                    // Points should be a base64 string (tldraw v3 format)
+                    expect(typeof segment.points).toBe('string');
+                    expect(segment.points.length).toBeGreaterThan(0);
                 }
             }
         });

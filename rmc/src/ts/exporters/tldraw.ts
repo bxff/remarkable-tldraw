@@ -25,6 +25,7 @@ import {
 } from '../../../../rmscene/src/ts/index.ts';
 import { buildAnchorPos } from './svg.ts';
 import { RM_PALETTE, HIGHLIGHT_COLORS } from './writing-tools.ts';
+import { parseTextDocument, paragraphToString } from '../text.ts';
 
 // ============================================================
 // Types from tldraw (using local definitions for now)
@@ -66,7 +67,7 @@ function toRichText(text: string): TLRichText {
 /** Draw shape segment */
 interface TLDrawShapeSegment {
     type: 'free' | 'straight';
-    points: VecModel[]; // Array of point objects (compatible with older tldraw format)
+    points: string; // Base64-encoded points (tldraw v3 format)
 }
 
 // ============================================================
@@ -301,8 +302,8 @@ function createTldrawDocument(): TLDrawDocument {
                 'com.tldraw.shape': 4,
                 'com.tldraw.shape.group': 0,
                 'com.tldraw.shape.text': 3,
-                'com.tldraw.shape.draw': 2,
-                'com.tldraw.shape.highlight': 1,
+                'com.tldraw.shape.draw': 3,      // Version 3 = Base64 points
+                'com.tldraw.shape.highlight': 2, // Version 2 = Base64 points
             },
         },
         records: [],
@@ -341,39 +342,70 @@ function createDefaultRecords(): any[] {
 // Shape creation
 // ============================================================
 
+/** Get anchor position for a group (same logic as SVG exporter) */
+function getAnchor(item: Group, anchorPos: Map<string, number>): [number, number] {
+    let anchorX = 0;
+    let anchorY = 0;
+
+    if (item.anchorId?.value) {
+        if (item.anchorOriginX?.value !== undefined) {
+            anchorX = item.anchorOriginX.value;
+        }
+        const anchorIdStr = crdtIdToString(item.anchorId.value);
+        const pos = anchorPos.get(anchorIdStr);
+        if (pos !== undefined) {
+            anchorY = pos;
+        }
+    }
+
+    return [anchorX, anchorY];
+}
+
 /** Convert rm Line to tldraw draw shape */
 function lineToDrawShape(
     line: Line,
     parentId: string,
-    index: IndexKey
+    index: IndexKey,
+    anchorOffsetX: number = 0,
+    anchorOffsetY: number = 0
 ): any {
-    // Calculate bounding box
+    // Calculate bounding box (with anchor offset)
     let minX = Infinity, minY = Infinity;
     let maxX = -Infinity, maxY = -Infinity;
 
     for (const p of line.points) {
-        const [x, y] = transformCoordinates(p.x, p.y);
+        const [x, y] = transformCoordinates(p.x + anchorOffsetX, p.y + anchorOffsetY);
         minX = Math.min(minX, x);
         minY = Math.min(minY, y);
         maxX = Math.max(maxX, x);
         maxY = Math.max(maxY, y);
     }
 
-    // Create normalized points with pressure as z
+    // Create normalized points with pressure as z (with anchor offset)
     const normalizedPoints: VecModel[] = [];
+    const isHighlighter = line.tool === Pen.HIGHLIGHTER_1 || line.tool === Pen.HIGHLIGHTER_2;
+
     for (const p of line.points) {
-        const [x, y] = transformCoordinates(p.x, p.y);
+        const [x, y] = transformCoordinates(p.x + anchorOffsetX, p.y + anchorOffsetY);
+        
+        let z = p.pressure / 255;
+        if (isHighlighter) {
+            z = 0.5;
+        } else {
+            // Ensure some minimal pressure to avoid tapering to absolute zero
+            if (z < 0.1) z = 0.1;
+        }
+
         normalizedPoints.push({
             x: x - minX,
             y: y - minY,
-            z: p.pressure / 255, // Normalize pressure to 0-1
+            z: z,
         });
     }
 
-    const isHighlighter = line.tool === Pen.HIGHLIGHTER_1 || line.tool === Pen.HIGHLIGHTER_2;
     const shapeType = isHighlighter ? 'highlight' : 'draw';
 
-    return {
+    const baseShape = {
         x: minX,
         y: minY,
         rotation: 0,
@@ -385,36 +417,67 @@ function lineToDrawShape(
         parentId,
         index,
         typeName: 'shape',
-        props: {
-            color: getLineColor(line),
-            fill: 'none',
-            dash: 'solid',
-            size: thicknessToTldrawSize(line.thicknessScale),
-            segments: [
-                {
-                    type: 'free',
-                    points: normalizedPoints,
-                },
-            ],
-            isComplete: true,
-            isClosed: false,
-            isPen: true,
-            scale: 1,
-        },
     };
+
+    if (isHighlighter) {
+        // Highlight shapes have a different schema - no fill, dash, or isClosed
+        return {
+            ...baseShape,
+            props: {
+                color: getLineColor(line),
+                size: thicknessToTldrawSize(line.thicknessScale),
+                segments: [
+                    {
+                        type: 'free',
+                        points: encodePoints(normalizedPoints),
+                    },
+                ],
+                isComplete: true,
+                isPen: !isHighlighter,
+                scale: 1,
+                scaleX: 1,
+                scaleY: 1,
+            },
+        };
+    } else {
+        // Draw shapes have fill, dash, and isClosed
+        return {
+            ...baseShape,
+            props: {
+                color: getLineColor(line),
+                fill: 'none',
+                dash: 'solid',
+                size: thicknessToTldrawSize(line.thicknessScale),
+                segments: [
+                    {
+                        type: 'free',
+                        points: encodePoints(normalizedPoints),
+                    },
+                ],
+                isComplete: true,
+                isClosed: false,
+                isPen: true,
+                scale: 1,
+                scaleX: 1,
+                scaleY: 1,
+            },
+        };
+    }
 }
 
 /** Convert rm GlyphRange to tldraw highlight shapes */
 function glyphRangeToHighlightShapes(
     glyph: GlyphRange,
     parentId: string,
-    indices: IndexKey[]
+    indices: IndexKey[],
+    anchorOffsetX: number = 0,
+    anchorOffsetY: number = 0
 ): any[] {
     const shapes: any[] = [];
 
     for (let i = 0; i < glyph.rectangles.length; i++) {
         const rect = glyph.rectangles[i];
-        const [x, y] = transformCoordinates(rect.x, rect.y);
+        const [x, y] = transformCoordinates(rect.x + anchorOffsetX, rect.y + anchorOffsetY);
         const w = rect.w * SCALE_FACTOR;
         const h = rect.h * SCALE_FACTOR;
 
@@ -442,13 +505,14 @@ function glyphRangeToHighlightShapes(
                 segments: [
                     {
                         type: 'straight',
-                        points: points,
+                        points: encodePoints(points),
                     },
                 ],
                 isComplete: true,
-                isClosed: false,
                 isPen: false,
                 scale: 1,
+                scaleX: 1,
+                scaleY: 1,
             },
         });
     }
@@ -462,13 +526,17 @@ function textToTextShape(
     parentId: string,
     index: IndexKey
 ): any {
-    // Collect all text content
-    let textContent = '';
-    for (const value of text.items.values()) {
-        if (typeof value === 'string') {
-            textContent += value;
-        }
+    // Use parseTextDocument and paragraphToString to match SVG exporter
+    const doc = parseTextDocument(text);
+
+    // Get text content from paragraphs (with trim like SVG does)
+    const lines: string[] = [];
+    for (const p of doc.contents) {
+        lines.push(paragraphToString(p).trim());
     }
+
+    // Filter out empty lines and join with newlines
+    const textContent = lines.join('\n');
 
     if (!textContent.trim()) {
         return null;
@@ -510,22 +578,23 @@ function processGroup(
     group: Group,
     parentId: string,
     records: any[],
-    tree: SceneTree
+    anchorPos: Map<string, number>,
+    parentOffsetX: number = 0,
+    parentOffsetY: number = 0
 ): void {
-    // Calculate anchor offset
-    let offsetY = 0;
-    if (group.anchorId?.value) {
-        // Could use anchor position from root text if needed
-    }
+    // Get this group's anchor offset
+    const [anchorX, anchorY] = getAnchor(group, anchorPos);
+    const offsetX = parentOffsetX + anchorX;
+    const offsetY = parentOffsetY + anchorY;
 
     for (const [id, item] of group.children.entries()) {
         if (isLine(item)) {
-            records.push(lineToDrawShape(item, parentId, getNextIndex()));
+            records.push(lineToDrawShape(item, parentId, getNextIndex(), offsetX, offsetY));
         } else if (isGlyphRange(item)) {
             const indices = getIndices(item.rectangles.length);
-            records.push(...glyphRangeToHighlightShapes(item, parentId, indices));
+            records.push(...glyphRangeToHighlightShapes(item, parentId, indices, offsetX, offsetY));
         } else if (isGroup(item)) {
-            processGroup(item, parentId, records, tree);
+            processGroup(item, parentId, records, anchorPos, offsetX, offsetY);
         }
     }
 }
@@ -542,6 +611,9 @@ export function treeToTldraw(tree: SceneTree): TLDrawDocument {
 
     const pageId = 'page:page';
 
+    // Build anchor positions from root text (same as SVG exporter)
+    const anchorPos = buildAnchorPos(tree.rootText);
+
     // Add root text as TLTextShape if present
     if (tree.rootText) {
         const textShape = textToTextShape(tree.rootText, pageId, getNextIndex());
@@ -550,8 +622,8 @@ export function treeToTldraw(tree: SceneTree): TLDrawDocument {
         }
     }
 
-    // Process strokes and highlights
-    processGroup(tree.root, pageId, doc.records, tree);
+    // Process strokes and highlights with anchor positions
+    processGroup(tree.root, pageId, doc.records, anchorPos);
 
     return doc;
 }

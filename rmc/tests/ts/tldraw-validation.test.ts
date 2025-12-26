@@ -127,6 +127,28 @@ function validateHighlightShapeProps(props: Record<string, unknown>): { valid: b
         return { valid: false, error: 'highlight shape props.isPen must be a boolean' };
     }
 
+    // Check for required fields
+    if (typeof props.scale !== 'number' || props.scale === 0) {
+        return { valid: false, error: 'highlight shape props.scale must be a non-zero number' };
+    }
+    if (typeof props.scaleX !== 'number' || props.scaleX === 0) {
+        return { valid: false, error: 'highlight shape props.scaleX must be a non-zero number' };
+    }
+    if (typeof props.scaleY !== 'number' || props.scaleY === 0) {
+        return { valid: false, error: 'highlight shape props.scaleY must be a non-zero number' };
+    }
+
+    // Highlight shapes should NOT have these properties (they cause validation errors)
+    if ('fill' in props) {
+        return { valid: false, error: 'highlight shape should not have fill property' };
+    }
+    if ('dash' in props) {
+        return { valid: false, error: 'highlight shape should not have dash property' };
+    }
+    if ('isClosed' in props) {
+        return { valid: false, error: 'highlight shape should not have isClosed property' };
+    }
+
     return { valid: true };
 }
 
@@ -290,7 +312,7 @@ describe('TLDraw Schema Validation', () => {
     });
 
     describe('Draw shape validation', () => {
-        it('should have valid segments with point arrays', () => {
+        it('should have valid segments with base64 encoded points', () => {
             const filePath = join(rmTestDir, 'abcd.strokes.rm');
             if (!existsSync(filePath)) return;
 
@@ -305,14 +327,9 @@ describe('TLDraw Schema Validation', () => {
                 for (const segment of shape.props.segments) {
                     expect(['free', 'straight']).toContain(segment.type);
 
-                    // Points should be an array (JSON format)
-                    expect(Array.isArray(segment.points)).toBe(true);
-
-                    for (const point of segment.points) {
-                        expect(typeof point.x).toBe('number');
-                        expect(typeof point.y).toBe('number');
-                        expect(typeof point.z).toBe('number');
-                    }
+                    // Points should be a base64 string (tldraw v3 format)
+                    expect(typeof segment.points).toBe('string');
+                    expect(segment.points.length).toBeGreaterThan(0);
                 }
             }
         });
