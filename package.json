@@ -1,0 +1,28 @@
+{
+  "name": "acta-hackathon-starter",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "ACTA 24-hour Global Hackathon starter repository",
+  "main": "index.js",
+  "scripts": {
+    "verify": "node verify-submission.js",
+    "start": "echo 'Add your start command here!'",
+    "test": "echo 'Add your test command here!'"
+  },
+  "keywords": [
+    "hackathon",
+    "acta",
+    "starter"
+  ],
+  "author": "ACTA Studios",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/actastudios/global-hackathon-v1"
+  },
+  "devDependencies": {
+    "@tldraw/tlschema": "^4.2.1",
+    "@tldraw/utils": "^4.2.1",
+    "vitest": "^4.0.16"
+  }
+}
