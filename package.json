@@ -5,7 +5,6 @@
   "description": "Convert between reMarkable .rm files and tldraw format",
   "main": "dist/index.js",
   "scripts": {
-    "verify": "node verify-submission.js",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
@@ -17,18 +16,14 @@
     "rmscene",
     "converter"
   ],
-  "author": "",
+  "author": "bxff <51504045+bxff@users.noreply.github.com>",
   "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/actastudios/global-hackathon-v1"
-  },
   "devDependencies": {
     "@tldraw/tlschema": "^4.2.1",
     "@tldraw/utils": "^4.2.1",
-    "@types/node": "^25.0.3",
-    "typescript": "^5.7.0",
-    "vitest": "^4.0.16"
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
   },
   "dependencies": {
     "jittered-fractional-indexing": "^1.0.0"
