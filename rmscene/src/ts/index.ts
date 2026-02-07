@@ -5,9 +5,11 @@
  */
 
 // Core types
-export {
+export type {
     CrdtId,
     LwwValue,
+} from './tagged-block-common';
+export {
     TagType,
     DataStream,
     UnexpectedBlockError,
@@ -20,16 +22,18 @@ export {
 } from './tagged-block-common';
 
 // CRDT Sequence
+export type {
+    CrdtSequenceItem,
+} from './crdt-sequence';
 export {
     CrdtSequence,
-    CrdtSequenceItem,
     createCrdtSequenceItem,
     toposortItems,
     END_MARKER,
 } from './crdt-sequence';
 
 // Scene items
-export {
+export type {
     SceneItem,
     Point,
     Line,
@@ -37,6 +41,8 @@ export {
     Text,
     GlyphRange,
     Rectangle,
+} from './scene-items';
+export {
     PenColor,
     Pen,
     ParagraphStyle,
@@ -54,13 +60,13 @@ export {
 } from './scene-items';
 
 // Block reader/writer
-export { TaggedBlockReader, MainBlockInfo, SubBlockInfo, BlockInfo, BlockOverflowError } from './tagged-block-reader';
+export type { MainBlockInfo, SubBlockInfo, BlockInfo } from './tagged-block-reader';
+export { TaggedBlockReader, BlockOverflowError } from './tagged-block-reader';
 export { TaggedBlockWriter } from './tagged-block-writer';
 
 // Scene stream (blocks)
-export {
+export type {
     Block,
-    BlockType,
     AuthorIdsBlock,
     MigrationInfoBlock,
     PageInfoBlock,
@@ -72,6 +78,9 @@ export {
     SceneGlyphItemBlock,
     RootTextBlock,
     UnreadableBlock,
+} from './scene-stream';
+export {
+    BlockType,
     readBlocks,
     readBlock,
     isAuthorIdsBlock,

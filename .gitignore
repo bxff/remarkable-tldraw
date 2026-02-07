@@ -53,3 +53,6 @@ coverage/
 temp/
 *.bak
 
+# reMarkable backups (large binary data)
+backups/
+
